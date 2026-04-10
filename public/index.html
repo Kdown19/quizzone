@@ -27,17 +27,44 @@
     --opt3: #FDCB6E;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
   body {
     background: var(--bg);
     color: var(--text);
     font-family: 'Outfit', sans-serif;
-    min-height: 100dvh;
     -webkit-tap-highlight-color: transparent;
   }
   ::selection { background: rgba(108, 92, 231, 0.4); }
 
-  .screen { display: none; max-width: 640px; margin: 0 auto; padding: 20px; }
-  .screen.active { display: block; }
+  .screen {
+    display: none;
+    width: 100%;
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .screen.active { display: flex; flex-direction: column; }
+
+  .screen-center {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .screen-pad {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+  }
 
   h1.logo {
     font-family: 'Space Mono', monospace;
@@ -69,7 +96,7 @@
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
   .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 4px 20px var(--accent-glow); }
   .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--surface-light); }
-  .btn-correct { background: var(--correct); color: #fff; }
+  .btn-submit { background: var(--correct); color: #fff; box-shadow: 0 4px 20px var(--correct-glow); font-size: 17px; padding: 16px 28px; }
 
   .input {
     padding: 13px 16px;
@@ -98,12 +125,12 @@
 
   .game-code {
     background: var(--surface);
-    padding: 8px 16px;
-    border-radius: 10px;
+    padding: 10px 20px;
+    border-radius: 12px;
     font-family: 'Space Mono', monospace;
-    font-size: 18px;
+    font-size: clamp(20px, 5vw, 28px);
     color: var(--gold);
-    letter-spacing: 3px;
+    letter-spacing: 4px;
     border: 1px solid var(--surface-light);
     display: inline-block;
   }
@@ -115,7 +142,6 @@
     margin-bottom: 16px;
     border: 1px solid var(--surface-light);
   }
-
   .q-header {
     display: flex;
     justify-content: space-between;
@@ -134,9 +160,6 @@
     grid-template-columns: 1fr 1fr;
     gap: 10px;
   }
-  @media (max-width: 480px) {
-    .options-grid.player-opts { grid-template-columns: 1fr; }
-  }
 
   .opt-input-wrap { position: relative; }
   .opt-input-wrap .input { padding-right: 36px; }
@@ -146,159 +169,114 @@
   .opt-input-wrap[data-i="3"] .input { border-left: 3px solid var(--opt3); }
 
   .correct-check {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: 2px solid var(--surface-light);
-    border-radius: 50%;
-    width: 22px;
-    height: 22px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    color: transparent;
-    font-size: 12px;
-    transition: all 0.2s;
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    border: 2px solid var(--surface-light); border-radius: 50%;
+    width: 22px; height: 22px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent; color: transparent; font-size: 12px; transition: all 0.2s;
   }
-  .correct-check.active {
-    background: var(--correct);
-    border-color: var(--correct);
-    color: #fff;
-  }
+  .correct-check.active { background: var(--correct); border-color: var(--correct); color: #fff; }
 
   .option-btn {
-    border: 2px solid;
-    border-radius: 14px;
-    padding: 18px 20px;
-    font-family: 'Outfit', sans-serif;
-    font-weight: 600;
-    font-size: 17px;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: transparent;
-    width: 100%;
+    border: 2px solid; border-radius: 14px; padding: 16px 18px;
+    font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 16px;
+    color: var(--text); cursor: pointer; transition: all 0.15s;
+    text-align: left; display: flex; justify-content: space-between; align-items: center;
+    background: transparent; width: 100%;
   }
   .option-btn:disabled { cursor: default; }
 
   .player-chip {
-    background: var(--surface-light);
-    padding: 10px 20px;
-    border-radius: 10px;
-    font-weight: 600;
-    font-size: 16px;
-    display: inline-block;
+    background: var(--surface-light); padding: 10px 20px; border-radius: 10px;
+    font-weight: 600; font-size: 16px; display: inline-block;
   }
 
   .timer-display {
-    font-family: 'Space Mono', monospace;
-    font-size: 28px;
-    font-weight: 700;
-    transition: color 0.3s;
+    font-family: 'Space Mono', monospace; font-size: 28px; font-weight: 700; transition: color 0.3s;
   }
 
   .result-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 14px;
-    border-radius: 10px;
-    background: var(--surface);
-    margin-bottom: 6px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; border-radius: 10px; background: var(--surface); margin-bottom: 6px;
   }
   .result-row.me { background: rgba(108, 92, 231, 0.15); }
-
-  .score-num {
-    font-family: 'Space Mono', monospace;
-    font-weight: 700;
-  }
+  .score-num { font-family: 'Space Mono', monospace; font-weight: 700; }
 
   .spinner {
-    width: 40px; height: 40px;
-    border: 3px solid var(--surface-light);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    margin: 30px auto;
+    width: 40px; height: 40px; border: 3px solid var(--surface-light);
+    border-top-color: var(--accent); border-radius: 50%; margin: 30px auto;
     animation: spin 1s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .flex-center {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100dvh;
-    gap: 16px;
-    text-align: center;
-  }
-
   .top-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px; flex-shrink: 0;
   }
-
   .remove-btn {
-    background: transparent;
-    border: none;
-    color: var(--wrong);
-    cursor: pointer;
-    font-size: 18px;
-    padding: 0 4px;
+    background: transparent; border: none; color: var(--wrong);
+    cursor: pointer; font-size: 18px; padding: 0 4px;
+  }
+  .host-option {
+    border-radius: 14px; padding: 18px 16px; font-weight: 600;
+    font-size: 16px; text-align: center; transition: all 0.3s;
   }
 
-  .host-option {
-    border-radius: 14px;
-    padding: 18px 16px;
-    font-weight: 600;
-    font-size: 16px;
-    text-align: center;
-    transition: all 0.3s;
+  .pq-content {
+    flex: 1; display: flex; flex-direction: column;
+    max-width: 500px; width: 100%; margin: 0 auto; padding: 0 20px;
+  }
+  .pq-question {
+    flex-shrink: 0; font-weight: 700; font-size: clamp(20px, 4vw, 26px);
+    line-height: 1.3; margin-bottom: 16px;
+  }
+  .pq-opts { flex: 1; display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+  .pq-footer {
+    flex-shrink: 0; padding: 16px 20px; max-width: 500px; width: 100%; margin: 0 auto;
+  }
+
+  @media (max-width: 480px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .option-btn { padding: 14px 16px; font-size: 15px; }
   }
 </style>
 </head>
 <body>
 
 <!-- LANDING -->
-<div id="landing" class="screen active flex-center">
-  <h1 class="logo">QUIZZONE</h1>
-  <p class="subtitle" style="max-width:260px">Multiplayer quiz — same points for everyone, no speed bonus</p>
-  <button class="btn btn-primary" style="width:220px" onclick="showScreen('host-setup')">Host a Game</button>
-  <button class="btn btn-ghost" style="width:220px" onclick="showScreen('player-join')">Join a Game</button>
+<div id="landing" class="screen active">
+  <div class="screen-center">
+    <h1 class="logo">QUIZZONE</h1>
+    <p class="subtitle" style="max-width:260px">Multiplayer quiz — same points for everyone, no speed bonus</p>
+    <button class="btn btn-primary" style="width:220px" onclick="goHost()">Host a Game</button>
+    <button class="btn btn-ghost" style="width:220px" onclick="goPlayer()">Join a Game</button>
+    <p id="landing-error" style="color:var(--wrong);font-size:14px;display:none"></p>
+  </div>
 </div>
 
 <!-- HOST: BUILD QUESTIONS -->
 <div id="host-setup" class="screen">
-  <div style="text-align:center;margin-bottom:40px">
-    <h1 class="logo" style="font-size:clamp(28px,5vw,42px)">QUIZZONE</h1>
-    <p class="subtitle">Build your quiz — no speed bonus, just brains</p>
-  </div>
-  <div id="questions-container"></div>
-  <div style="display:flex;gap:12px;margin-top:8px">
-    <button class="btn btn-ghost" style="flex:1" onclick="addQuestion()">+ Add Question</button>
-    <button class="btn btn-primary" style="flex:1" id="start-btn" onclick="createGame()" disabled>Start Game</button>
+  <div class="screen-pad" style="overflow-y:auto">
+    <div style="text-align:center;margin-bottom:30px;flex-shrink:0">
+      <h1 class="logo" style="font-size:clamp(28px,5vw,42px)">QUIZZONE</h1>
+      <p class="subtitle">Build your quiz — no speed bonus, just brains</p>
+    </div>
+    <div id="questions-container" style="flex:1"></div>
+    <div style="display:flex;gap:12px;margin-top:8px;flex-shrink:0;padding-bottom:20px">
+      <button class="btn btn-ghost" style="flex:1" onclick="addQuestion()">+ Add Question</button>
+      <button class="btn btn-primary" style="flex:1" id="start-btn" onclick="createGame()" disabled>Start Game</button>
+    </div>
   </div>
 </div>
 
 <!-- HOST: LOBBY -->
-<div id="host-lobby" class="screen" style="text-align:center">
-  <div class="top-bar">
+<div id="host-lobby" class="screen">
+  <div class="screen-center">
     <span class="q-label">QUIZZONE</span>
     <span class="game-code" id="host-code"></span>
-  </div>
-  <div style="margin-top:60px">
-    <h2 style="font-weight:800;font-size:32px">Waiting for players...</h2>
-    <p class="subtitle">Share the code above — friends join on their own device</p>
-    <div id="host-player-list" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:30px 0">
+    <h2 style="font-weight:800;font-size:clamp(24px,5vw,32px);margin-top:20px">Waiting for players...</h2>
+    <p class="subtitle">Share the code above — friends join on their phone</p>
+    <div id="host-player-list" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:20px 0">
       <span style="color:var(--text-dim);font-style:italic">No one yet...</span>
     </div>
     <button class="btn btn-primary" style="width:220px" id="host-start-btn" onclick="hostStartGame()" disabled>Start Game →</button>
@@ -311,41 +289,49 @@
     <span style="color:var(--text-dim);font-size:14px" id="hq-progress"></span>
     <span class="timer-display" id="hq-timer"></span>
   </div>
-  <h2 style="font-weight:700;font-size:clamp(22px,4vw,30px);margin:20px 0 30px;line-height:1.3" id="hq-text"></h2>
-  <div class="options-grid" id="hq-options"></div>
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px">
-    <span style="color:var(--text-dim);font-size:14px" id="hq-answer-count"></span>
-    <div id="hq-actions"></div>
+  <div class="screen-pad" style="flex:1;justify-content:center">
+    <h2 style="font-weight:700;font-size:clamp(22px,4vw,30px);margin-bottom:24px;line-height:1.3;text-align:center" id="hq-text"></h2>
+    <div class="options-grid" id="hq-options"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px">
+      <span style="color:var(--text-dim);font-size:14px" id="hq-answer-count"></span>
+      <div id="hq-actions"></div>
+    </div>
   </div>
 </div>
 
 <!-- HOST: RESULTS -->
-<div id="host-results" class="screen" style="text-align:center">
-  <h1 style="font-family:'Space Mono',monospace;font-size:32px;margin:20px 0 8px">RESULTS</h1>
-  <p class="subtitle" id="results-subtitle"></p>
-  <div id="results-list" style="margin-top:30px"></div>
-  <button class="btn btn-ghost" style="margin-top:30px;width:220px" onclick="location.reload()">Play Again</button>
+<div id="host-results" class="screen">
+  <div class="screen-center" style="justify-content:flex-start;padding-top:40px">
+    <h1 style="font-family:'Space Mono',monospace;font-size:32px">RESULTS</h1>
+    <p class="subtitle" id="results-subtitle"></p>
+    <div id="results-list" style="margin-top:20px;width:100%;max-width:480px"></div>
+    <button class="btn btn-ghost" style="margin-top:20px;width:220px" onclick="location.reload()">Play Again</button>
+  </div>
 </div>
 
 <!-- PLAYER: JOIN -->
-<div id="player-join" class="screen flex-center">
-  <h1 class="logo" style="font-size:clamp(28px,5vw,42px)">QUIZZONE</h1>
-  <p class="subtitle">Enter the game code to join</p>
-  <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px">
-    <input class="input" id="pj-code" placeholder="GAME CODE" maxlength="5"
-      style="text-align:center;font-family:'Space Mono',monospace;font-size:24px;letter-spacing:6px;padding:16px"
-      oninput="this.value=this.value.toUpperCase()">
-    <input class="input" id="pj-name" placeholder="Your name" style="text-align:center">
-    <p style="color:var(--wrong);font-size:14px;display:none" id="pj-error"></p>
-    <button class="btn btn-primary" id="pj-btn" onclick="joinGame()">Join Game</button>
+<div id="player-join" class="screen">
+  <div class="screen-center">
+    <h1 class="logo" style="font-size:clamp(28px,5vw,42px)">QUIZZONE</h1>
+    <p class="subtitle">Enter the game code to join</p>
+    <div style="display:flex;flex-direction:column;gap:12px;width:100%;max-width:320px">
+      <input class="input" id="pj-code" placeholder="GAME CODE" maxlength="5"
+        style="text-align:center;font-family:'Space Mono',monospace;font-size:24px;letter-spacing:6px;padding:16px"
+        oninput="this.value=this.value.toUpperCase()">
+      <input class="input" id="pj-name" placeholder="Your name" style="text-align:center">
+      <p style="color:var(--wrong);font-size:14px;display:none" id="pj-error"></p>
+      <button class="btn btn-primary" id="pj-btn" onclick="joinGame()">Join Game</button>
+    </div>
   </div>
 </div>
 
 <!-- PLAYER: WAITING -->
-<div id="player-wait" class="screen" style="text-align:center;padding-top:80px">
-  <h2 style="font-weight:700">You're in!</h2>
-  <p class="subtitle">Waiting for the host to start...</p>
-  <div class="spinner"></div>
+<div id="player-wait" class="screen">
+  <div class="screen-center">
+    <h2 style="font-weight:700">You're in!</h2>
+    <p class="subtitle">Waiting for the host to start...</p>
+    <div class="spinner"></div>
+  </div>
 </div>
 
 <!-- PLAYER: QUESTION -->
@@ -354,22 +340,27 @@
     <span style="color:var(--text-dim);font-size:14px" id="pq-progress"></span>
     <span class="timer-display" id="pq-timer"></span>
   </div>
-  <h2 style="font-weight:700;font-size:clamp(20px,4vw,26px);margin:0 0 24px;line-height:1.3" id="pq-text"></h2>
-  <div id="pq-options" style="display:flex;flex-direction:column;gap:10px"></div>
-  <p style="text-align:center;color:var(--text-dim);margin-top:20px;display:none" id="pq-locked">Locked in! Waiting for timer...</p>
+  <div class="pq-content">
+    <h2 class="pq-question" id="pq-text"></h2>
+    <div class="pq-opts" id="pq-options"></div>
+  </div>
+  <div class="pq-footer" id="pq-footer" style="display:none">
+    <button class="btn btn-submit" id="pq-submit-btn" onclick="confirmAnswer()">Lock In Answer</button>
+  </div>
 </div>
 
 <!-- PLAYER: RESULTS -->
-<div id="player-results" class="screen" style="text-align:center">
-  <h2 style="font-family:'Space Mono',monospace;font-size:28px;margin-top:20px">RESULTS</h2>
-  <div id="player-result-highlight" style="margin:20px 0"></div>
-  <div id="player-result-list"></div>
+<div id="player-results" class="screen">
+  <div class="screen-center" style="justify-content:flex-start;padding-top:40px">
+    <h2 style="font-family:'Space Mono',monospace;font-size:28px">RESULTS</h2>
+    <div id="player-result-highlight" style="margin:16px 0;width:100%;max-width:320px"></div>
+    <div id="player-result-list" style="width:100%;max-width:400px"></div>
+  </div>
 </div>
 
 <script>
-// ─── State ───────────────────────────────────────────────────────────
 let ws;
-let role = null; // 'host' | 'player'
+let role = null;
 let questions = [];
 let gameCode = '';
 let playerId = null;
@@ -379,7 +370,6 @@ let currentPhase = '';
 
 const optColors = ['#6C5CE7', '#E84393', '#00B894', '#FDCB6E'];
 
-// ─── Screen management ──────────────────────────────────────────────
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -387,18 +377,39 @@ function showScreen(id) {
 
 // ─── WebSocket ───────────────────────────────────────────────────────
 function connect() {
-  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  ws = new WebSocket(`${proto}//${location.host}`);
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    handleMessage(msg);
-  };
-  ws.onclose = () => setTimeout(connect, 2000);
-  return new Promise((res) => { ws.onopen = res; });
+  return new Promise((resolve, reject) => {
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const url = `${proto}//${location.host}`;
+    ws = new WebSocket(url);
+    ws.onopen = () => resolve();
+    ws.onerror = (e) => reject(e);
+    ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
+    ws.onclose = () => { setTimeout(() => { if (role) connect().catch(() => {}); }, 2000); };
+  });
 }
 
-function send(msg) {
-  if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg));
+function send(msg) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg)); }
+
+async function goHost() {
+  try {
+    await connect();
+    role = 'host';
+    showScreen('host-setup');
+  } catch(e) {
+    document.getElementById('landing-error').textContent = 'Connection failed';
+    document.getElementById('landing-error').style.display = 'block';
+  }
+}
+
+async function goPlayer() {
+  try {
+    await connect();
+    role = 'player';
+    showScreen('player-join');
+  } catch(e) {
+    document.getElementById('landing-error').textContent = 'Connection failed';
+    document.getElementById('landing-error').style.display = 'block';
+  }
 }
 
 function handleMessage(msg) {
@@ -408,22 +419,17 @@ function handleMessage(msg) {
       document.getElementById('host-code').textContent = gameCode;
       showScreen('host-lobby');
       break;
-
     case 'joined':
       playerId = msg.playerId;
       showScreen('player-wait');
       break;
-
     case 'error':
-      const errEl = document.getElementById('pj-error');
-      errEl.textContent = msg.message;
-      errEl.style.display = 'block';
+      document.getElementById('pj-error').textContent = msg.message;
+      document.getElementById('pj-error').style.display = 'block';
       break;
-
     case 'players':
       renderHostPlayers(msg.players);
       break;
-
     case 'question':
       currentPhase = 'question';
       playerSelected = null;
@@ -431,25 +437,21 @@ function handleMessage(msg) {
       if (role === 'host') renderHostQuestion(msg);
       else renderPlayerQuestion(msg);
       break;
-
     case 'tick':
       document.querySelectorAll('.timer-display').forEach(el => {
         el.textContent = msg.time;
         el.style.color = msg.time <= 5 ? 'var(--wrong)' : 'var(--text)';
       });
       break;
-
     case 'answer_count':
       const acEl = document.getElementById('hq-answer-count');
       if (acEl) acEl.textContent = `${msg.count} / ${msg.total} answered`;
       break;
-
     case 'reveal':
       currentPhase = 'reveal';
       if (role === 'host') renderHostReveal(msg);
       else renderPlayerReveal(msg);
       break;
-
     case 'results':
       if (role === 'host') renderHostResults(msg.scores);
       else renderPlayerResults(msg.scores);
@@ -511,11 +513,7 @@ function validateQuestions() {
   btn.textContent = `Start Game (${questions.length} Q${questions.length > 1 ? 's' : ''})`;
 }
 
-async function createGame() {
-  await connect();
-  role = 'host';
-  send({ type: 'create', questions });
-}
+function createGame() { send({ type: 'create', questions }); }
 
 // ─── HOST: Lobby ─────────────────────────────────────────────────────
 function renderHostPlayers(players) {
@@ -529,10 +527,7 @@ function renderHostPlayers(players) {
 }
 
 let hostQi = 0;
-function hostStartGame() {
-  hostQi = 0;
-  send({ type: 'start_question', qi: 0 });
-}
+function hostStartGame() { hostQi = 0; send({ type: 'start_question', qi: 0 }); }
 
 // ─── HOST: Question Display ─────────────────────────────────────────
 let currentHostMsg = null;
@@ -546,39 +541,29 @@ function renderHostQuestion(msg) {
   document.getElementById('hq-text').textContent = msg.question;
   document.getElementById('hq-answer-count').textContent = '0 answered';
 
-  const optsEl = document.getElementById('hq-options');
-  optsEl.innerHTML = msg.options.map((opt, oi) => `
-    <div class="host-option" style="background:${optColors[oi]}18;border:2px solid ${optColors[oi]}">
-      ${esc(opt)}
-    </div>
+  document.getElementById('hq-options').innerHTML = msg.options.map((opt, oi) => `
+    <div class="host-option" style="background:${optColors[oi]}18;border:2px solid ${optColors[oi]}">${esc(opt)}</div>
   `).join('');
 
   document.getElementById('hq-actions').innerHTML =
-    `<button class="btn btn-ghost" onclick="send({type:'end_early'})" style="padding:8px 20px">End Early</button>`;
-
+    `<button class="btn btn-ghost" onclick="send({type:'end_early'})" style="padding:8px 20px;width:auto">End Early</button>`;
   hostQi = msg.qi;
 }
 
 function renderHostReveal(msg) {
-  const optsEl = document.getElementById('hq-options');
   const opts = currentHostMsg.options;
-  optsEl.innerHTML = opts.map((opt, oi) => {
+  document.getElementById('hq-options').innerHTML = opts.map((opt, oi) => {
     const isCorrect = msg.correct === oi;
     return `<div class="host-option" style="
       background:${isCorrect ? 'rgba(0,201,167,0.13)' : 'rgba(255,107,107,0.07)'};
-      border:2px solid ${isCorrect ? 'var(--correct)' : 'rgba(255,107,107,0.3)'};
-      position:relative;
-    ">
-      ${esc(opt)}
-      ${isCorrect ? '<span style="position:absolute;top:8px;right:12px;font-size:18px">✓</span>' : ''}
-    </div>`;
+      border:2px solid ${isCorrect ? 'var(--correct)' : 'rgba(255,107,107,0.3)'};position:relative;
+    ">${esc(opt)}${isCorrect ? '<span style="position:absolute;top:8px;right:12px;font-size:18px">✓</span>' : ''}</div>`;
   }).join('');
 
   document.getElementById('hq-timer').textContent = '';
-
   const isLast = hostQi >= currentHostMsg.total - 1;
   document.getElementById('hq-actions').innerHTML =
-    `<button class="btn btn-primary" onclick="${isLast ? "send({type:'show_results'})" : `send({type:'start_question',qi:${hostQi+1}})`}" style="padding:8px 20px">
+    `<button class="btn btn-primary" onclick="${isLast ? "send({type:'show_results'})" : `send({type:'start_question',qi:${hostQi+1}})`}" style="padding:8px 20px;width:auto">
       ${isLast ? 'See Results →' : 'Next Question →'}
     </button>`;
 }
@@ -586,17 +571,14 @@ function renderHostReveal(msg) {
 // ─── HOST: Results ───────────────────────────────────────────────────
 function renderHostResults(scores) {
   showScreen('host-results');
-  document.getElementById('results-subtitle').textContent =
-    `${questions.length} questions · 100 pts each · no speed bonus`;
+  document.getElementById('results-subtitle').textContent = `${questions.length} questions · 100 pts each · no speed bonus`;
   const medals = ['🥇','🥈','🥉'];
   const medalColors = ['var(--gold)','var(--silver)','var(--bronze)'];
   const max = questions.length * 100;
   document.getElementById('results-list').innerHTML = scores.map((s, i) => `
-    <div style="
-      background:var(--surface);border-radius:14px;padding:16px 20px;
+    <div style="background:var(--surface);border-radius:14px;padding:16px 20px;
       display:flex;align-items:center;gap:14px;margin-bottom:10px;
-      border:1px solid ${i < 3 ? medalColors[i] : 'var(--surface-light)'};
-    ">
+      border:1px solid ${i < 3 ? medalColors[i] : 'var(--surface-light)'};">
       <span style="font-family:'Space Mono',monospace;font-size:${i<3?24:18}px;color:${i<3?medalColors[i]:'var(--text-dim)'};width:36px;text-align:center;flex-shrink:0">
         ${i < 3 ? medals[i] : (i+1)+'.'}
       </span>
@@ -610,16 +592,14 @@ function renderHostResults(scores) {
 }
 
 // ─── PLAYER: Join ────────────────────────────────────────────────────
-async function joinGame() {
+function joinGame() {
   const code = document.getElementById('pj-code').value.trim();
   const name = document.getElementById('pj-name').value.trim();
   if (code.length < 3 || !name) return;
-  await connect();
-  role = 'player';
   send({ type: 'join', code, name });
 }
 
-// ─── PLAYER: Question ───────────────────────────────────────────────
+// ─── PLAYER: Question (select then confirm) ─────────────────────────
 let playerCurrentMsg = null;
 
 function renderPlayerQuestion(msg) {
@@ -629,41 +609,71 @@ function renderPlayerQuestion(msg) {
   document.getElementById('pq-timer').textContent = msg.time;
   document.getElementById('pq-timer').style.color = 'var(--text)';
   document.getElementById('pq-text').textContent = msg.question;
-  document.getElementById('pq-locked').style.display = 'none';
 
-  const optsEl = document.getElementById('pq-options');
-  optsEl.innerHTML = msg.options.map((opt, oi) => `
+  // Reset footer
+  const footer = document.getElementById('pq-footer');
+  footer.style.display = 'none';
+  const submitBtn = document.getElementById('pq-submit-btn');
+  submitBtn.disabled = false;
+  submitBtn.textContent = 'Lock In Answer';
+  submitBtn.style.background = 'var(--correct)';
+  submitBtn.style.boxShadow = '0 4px 20px var(--correct-glow)';
+  submitBtn.style.color = '#fff';
+
+  document.getElementById('pq-options').innerHTML = msg.options.map((opt, oi) => `
     <button class="option-btn" id="popt-${oi}"
       style="background:${optColors[oi]}18;border-color:${optColors[oi]}66"
-      onclick="submitAnswer(${oi})">
+      onclick="selectAnswer(${oi})">
       ${esc(opt)}
     </button>
   `).join('');
 }
 
-function submitAnswer(oi) {
+function selectAnswer(oi) {
   if (playerSubmitted) return;
-  playerSubmitted = true;
   playerSelected = oi;
-  send({ type: 'answer', choice: oi });
 
-  // Highlight selected
+  // Highlight selected, dim others
   document.querySelectorAll('.option-btn').forEach((btn, i) => {
-    btn.disabled = true;
     if (i === oi) {
       btn.style.background = optColors[oi] + '44';
       btn.style.borderColor = optColors[oi];
+      btn.style.opacity = '1';
+    } else {
+      btn.style.background = optColors[i] + '18';
+      btn.style.borderColor = optColors[i] + '66';
+      btn.style.opacity = '0.5';
     }
   });
-  document.getElementById('pq-locked').style.display = 'block';
+
+  // Show submit button
+  document.getElementById('pq-footer').style.display = 'block';
+}
+
+function confirmAnswer() {
+  if (playerSubmitted || playerSelected === null) return;
+  playerSubmitted = true;
+  send({ type: 'answer', choice: playerSelected });
+
+  // Disable options
+  document.querySelectorAll('.option-btn').forEach(btn => { btn.disabled = true; });
+
+  // Update button to locked state
+  const submitBtn = document.getElementById('pq-submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = '✓ Locked In';
+  submitBtn.style.background = 'var(--surface-light)';
+  submitBtn.style.boxShadow = 'none';
+  submitBtn.style.color = 'var(--text-dim)';
 }
 
 function renderPlayerReveal(msg) {
   document.getElementById('pq-timer').textContent = '';
-  document.getElementById('pq-locked').style.display = 'none';
+  document.getElementById('pq-footer').style.display = 'none';
 
   document.querySelectorAll('.option-btn').forEach((btn, oi) => {
     btn.disabled = true;
+    btn.style.opacity = '1';
     const isCorrect = msg.correct === oi;
     const isWrong = playerSelected === oi && msg.correct !== oi;
     if (isCorrect) {
@@ -675,7 +685,7 @@ function renderPlayerReveal(msg) {
       btn.style.borderColor = 'var(--wrong)';
       btn.innerHTML += ' <span style="font-size:20px">✗</span>';
     } else {
-      btn.style.opacity = '0.4';
+      btn.style.opacity = '0.3';
     }
   });
 }
@@ -694,8 +704,7 @@ function renderPlayerResults(scores) {
       <div style="font-size:40px;margin-bottom:8px">${myRank===0?'🥇':myRank===1?'🥈':myRank===2?'🥉':'🎯'}</div>
       <div style="font-weight:800;font-size:24px">#${myRank + 1} Place</div>
       <div style="font-family:'Space Mono',monospace;color:var(--accent);font-size:20px;margin-top:4px">${myScore} pts</div>
-    </div>
-  `;
+    </div>`;
 
   document.getElementById('player-result-list').innerHTML = scores.map((s, i) => `
     <div class="result-row ${s.pid === playerId ? 'me' : ''}">
