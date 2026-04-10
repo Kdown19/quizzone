@@ -260,6 +260,7 @@
     <div style="text-align:center;margin-bottom:30px;flex-shrink:0">
       <h1 class="logo" style="font-size:clamp(28px,5vw,42px)">QUIZZONE</h1>
       <p class="subtitle">Build your quiz — no speed bonus, just brains</p>
+      <button class="btn btn-submit" style="width:280px;margin:16px auto 0" onclick="loadPreset()">Load Trivia Night Questions (40)</button>
     </div>
     <div id="questions-container" style="flex:1"></div>
     <div style="display:flex;gap:12px;margin-top:8px;flex-shrink:0;padding-bottom:20px">
@@ -376,16 +377,66 @@ function showScreen(id) {
 }
 
 // ─── WebSocket ───────────────────────────────────────────────────────
+let disconnected = false;
+
 function connect() {
   return new Promise((resolve, reject) => {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
     const url = `${proto}//${location.host}`;
     ws = new WebSocket(url);
-    ws.onopen = () => resolve();
+    ws.onopen = () => {
+      hideReconnectBanner();
+      disconnected = false;
+      resolve();
+    };
     ws.onerror = (e) => reject(e);
     ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
-    ws.onclose = () => { setTimeout(() => { if (role) connect().catch(() => {}); }, 2000); };
+    ws.onclose = () => {
+      if (role === 'player' && playerId) {
+        disconnected = true;
+        showReconnectBanner();
+      }
+      if (role === 'host') {
+        // Host auto-reconnects silently
+        setTimeout(() => { connect().catch(() => {}); }, 2000);
+      }
+    };
   });
+}
+
+function showReconnectBanner() {
+  let banner = document.getElementById('reconnect-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'reconnect-banner';
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:var(--wrong);color:#fff;padding:14px 20px;text-align:center;font-family:Outfit,sans-serif;font-weight:700;font-size:15px;z-index:9999;display:flex;align-items:center;justify-content:center;gap:12px;';
+    banner.innerHTML = 'Connection lost <button onclick="attemptReconnect()" style="background:#fff;color:var(--wrong);border:none;border-radius:8px;padding:8px 20px;font-family:Outfit,sans-serif;font-weight:700;font-size:14px;cursor:pointer;">Reconnect</button>';
+    document.body.appendChild(banner);
+  }
+  banner.style.display = 'flex';
+}
+
+function hideReconnectBanner() {
+  const banner = document.getElementById('reconnect-banner');
+  if (banner) banner.style.display = 'none';
+}
+
+async function attemptReconnect() {
+  const banner = document.getElementById('reconnect-banner');
+  if (banner) banner.innerHTML = 'Reconnecting...';
+  try {
+    await connect();
+    // Re-send join with existing player info
+    const storedCode = sessionStorage.getItem('qz_code');
+    const storedName = sessionStorage.getItem('qz_name');
+    const storedPid = sessionStorage.getItem('qz_pid');
+    if (storedCode && storedName) {
+      gameCode = storedCode;
+      send({ type: 'join', code: storedCode, name: storedName, playerId: storedPid });
+    }
+  } catch(e) {
+    if (banner) banner.innerHTML = 'Connection lost <button onclick="attemptReconnect()" style="background:#fff;color:var(--wrong);border:none;border-radius:8px;padding:8px 20px;font-family:Outfit,sans-serif;font-weight:700;font-size:14px;cursor:pointer;">Reconnect</button>';
+  }
 }
 
 function send(msg) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg)); }
@@ -421,7 +472,26 @@ function handleMessage(msg) {
       break;
     case 'joined':
       playerId = msg.playerId;
-      showScreen('player-wait');
+      sessionStorage.setItem('qz_pid', playerId);
+      if (!msg.reconnected) showScreen('player-wait');
+      break;
+    case 'already_answered':
+      // Player reconnected and had already answered this question
+      playerSelected = msg.choice;
+      playerSubmitted = true;
+      document.querySelectorAll('.option-btn').forEach((btn, i) => {
+        btn.disabled = true;
+        if (i === msg.choice) {
+          btn.style.background = optColors[msg.choice] + '44';
+          btn.style.borderColor = optColors[msg.choice];
+          btn.style.opacity = '1';
+        } else {
+          btn.style.opacity = '0.5';
+        }
+      });
+      const sf = document.getElementById('pq-submit-btn');
+      if (sf) { sf.disabled = true; sf.textContent = '✓ Locked In'; sf.style.background = 'var(--surface-light)'; sf.style.boxShadow = 'none'; sf.style.color = 'var(--text-dim)'; }
+      document.getElementById('pq-footer').style.display = 'block';
       break;
     case 'error':
       document.getElementById('pj-error').textContent = msg.message;
@@ -515,6 +585,19 @@ function validateQuestions() {
 
 function createGame() { send({ type: 'create', questions }); }
 
+async function loadPreset() {
+  try {
+    const res = await fetch('/api/questions?key=hostonly');
+    const preset = await res.json();
+    if (preset.length === 0 || preset.error) { alert('No preset questions found'); return; }
+    questions = preset;
+    renderQuestions();
+    document.querySelector('#host-setup .screen-pad').scrollTop = 0;
+  } catch(e) {
+    alert('Failed to load preset questions');
+  }
+}
+
 // ─── HOST: Lobby ─────────────────────────────────────────────────────
 function renderHostPlayers(players) {
   const el = document.getElementById('host-player-list');
@@ -596,6 +679,9 @@ function joinGame() {
   const code = document.getElementById('pj-code').value.trim();
   const name = document.getElementById('pj-name').value.trim();
   if (code.length < 3 || !name) return;
+  gameCode = code;
+  sessionStorage.setItem('qz_code', code);
+  sessionStorage.setItem('qz_name', name);
   send({ type: 'join', code, name });
 }
 

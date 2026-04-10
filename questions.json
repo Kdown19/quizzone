@@ -1,0 +1,482 @@
+[
+  {
+    "category": "Math",
+    "q": "What is the derivative of e^x?",
+    "options": [
+      "e^(x+1)",
+      "e^x",
+      "xe^(x-1)",
+      "ln(x)"
+    ],
+    "correct": 1,
+    "time": 15
+  },
+  {
+    "category": "UW History",
+    "q": "What breed of dog is Dubs, UW's live mascot?",
+    "options": [
+      "Siberian Husky",
+      "Akita",
+      "Samoyed",
+      "Alaskan Malamute"
+    ],
+    "correct": 3,
+    "time": 15
+  },
+  {
+    "category": "Brainrot",
+    "q": "What game popularized the term 'sus'?",
+    "options": [
+      "Fortnite",
+      "Among Us",
+      "Fall Guys",
+      "Minecraft"
+    ],
+    "correct": 1,
+    "time": 15
+  },
+  {
+    "category": "Geography",
+    "q": "Which desert is the largest in the world by total area?",
+    "options": [
+      "Antarctic",
+      "Arabian",
+      "Gobi",
+      "Sahara"
+    ],
+    "correct": 0,
+    "time": 20
+  },
+  {
+    "category": "World History",
+    "q": "The Thirty Years' War (1618\u20131648) was primarily fought in which region?",
+    "options": [
+      "British Isles",
+      "Scandinavia",
+      "Central Europe",
+      "Iberian Peninsula"
+    ],
+    "correct": 2,
+    "time": 20
+  },
+  {
+    "category": "Math",
+    "q": "What does the second derivative of a function describe?",
+    "options": [
+      "Area under the curve",
+      "Y-intercept",
+      "Slope",
+      "Concavity"
+    ],
+    "correct": 3,
+    "time": 20
+  },
+  {
+    "category": "UW History",
+    "q": "In what year was the University of Washington founded?",
+    "options": [
+      "1871",
+      "1851",
+      "1889",
+      "1861"
+    ],
+    "correct": 3,
+    "time": 15
+  },
+  {
+    "category": "Geography",
+    "q": "What is the capital of Australia?",
+    "options": [
+      "Sydney",
+      "Melbourne",
+      "Canberra",
+      "Brisbane"
+    ],
+    "correct": 2,
+    "time": 15
+  },
+  {
+    "category": "Brainrot",
+    "q": "'Cash me outside, how bout dat' originated on which TV show?",
+    "options": [
+      "Dr. Phil",
+      "Steve Harvey",
+      "Jerry Springer",
+      "Maury"
+    ],
+    "correct": 0,
+    "time": 15
+  },
+  {
+    "category": "Math",
+    "q": "The chain rule is used to differentiate which type of function?",
+    "options": [
+      "Step functions",
+      "Linear functions",
+      "Composite functions",
+      "Constant functions"
+    ],
+    "correct": 2,
+    "time": 20
+  },
+  {
+    "category": "UW History",
+    "q": "Which famous martial artist enrolled at UW in 1961 and met his wife there?",
+    "options": [
+      "Jet Li",
+      "Bruce Lee",
+      "Chuck Norris",
+      "Jackie Chan"
+    ],
+    "correct": 1,
+    "time": 15
+  },
+  {
+    "category": "Geography",
+    "q": "How many time zones does Russia span?",
+    "options": [
+      "7",
+      "13",
+      "11",
+      "9"
+    ],
+    "correct": 2,
+    "time": 20
+  },
+  {
+    "category": "World History",
+    "q": "The Rosetta Stone was key to deciphering which writing system?",
+    "options": [
+      "Sumerian cuneiform",
+      "Egyptian hieroglyphs",
+      "Phoenician script",
+      "Linear B"
+    ],
+    "correct": 1,
+    "time": 20
+  },
+  {
+    "category": "Math",
+    "q": "What is the integral of 1/x dx?",
+    "options": [
+      "ln|x| + C",
+      "e^x + C",
+      "x\u00b2 + C",
+      "-1/x\u00b2 + C"
+    ],
+    "correct": 0,
+    "time": 15
+  },
+  {
+    "category": "UW History",
+    "q": "UW's Drumheller Fountain is aligned to face which mountain?",
+    "options": [
+      "Mount St. Helens",
+      "Mount Rainier",
+      "Mount Olympus",
+      "Mount Baker"
+    ],
+    "correct": 1,
+    "time": 15
+  },
+  {
+    "category": "Brainrot",
+    "q": "The Harlem Shake meme trend went viral in which year?",
+    "options": [
+      "2011",
+      "2014",
+      "2013",
+      "2015"
+    ],
+    "correct": 2,
+    "time": 15
+  },
+  {
+    "category": "Geography",
+    "q": "Which strait separates Europe from Africa?",
+    "options": [
+      "Strait of Hormuz",
+      "Strait of Gibraltar",
+      "Bosphorus Strait",
+      "Strait of Malacca"
+    ],
+    "correct": 1,
+    "time": 20
+  },
+  {
+    "category": "World History",
+    "q": "Who was the first Emperor of the Roman Empire?",
+    "options": [
+      "Augustus",
+      "Julius Caesar",
+      "Nero",
+      "Tiberius"
+    ],
+    "correct": 0,
+    "time": 20
+  },
+  {
+    "category": "Math",
+    "q": "What is the derivative of sin(x)?",
+    "options": [
+      "tan(x)",
+      "cos(x)",
+      "-cos(x)",
+      "-sin(x)"
+    ],
+    "correct": 1,
+    "time": 15
+  },
+  {
+    "category": "UW History",
+    "q": "What is the name of UW's oldest building on its current campus, built in 1895?",
+    "options": [
+      "Johnson Hall",
+      "Denny Hall",
+      "Bagley Hall",
+      "Meany Hall"
+    ],
+    "correct": 1,
+    "time": 20
+  },
+  {
+    "category": "Geography",
+    "q": "Which country contains the most UNESCO World Heritage Sites?",
+    "options": [
+      "Italy",
+      "France",
+      "Spain",
+      "China"
+    ],
+    "correct": 0,
+    "time": 20
+  },
+  {
+    "category": "World History",
+    "q": "The Ottoman Empire fell after which war?",
+    "options": [
+      "Russo-Turkish War",
+      "World War I",
+      "Crimean War",
+      "World War II"
+    ],
+    "correct": 1,
+    "time": 20
+  },
+  {
+    "category": "Brainrot",
+    "q": "What was the name of the gorilla at the Cincinnati Zoo whose 2016 death became a massive meme?",
+    "options": [
+      "Koko",
+      "Caesar",
+      "Harambe",
+      "Bonzo"
+    ],
+    "correct": 2,
+    "time": 15
+  },
+  {
+    "category": "Math",
+    "q": "What is the limit of sin(x)/x as x approaches 0?",
+    "options": [
+      "Undefined",
+      "1",
+      "0",
+      "Infinity"
+    ],
+    "correct": 1,
+    "time": 20
+  },
+  {
+    "category": "UW History",
+    "q": "How many official live mascots has UW had since the tradition began in 1922?",
+    "options": [
+      "17",
+      "11",
+      "9",
+      "14"
+    ],
+    "correct": 3,
+    "time": 20
+  },
+  {
+    "category": "Geography",
+    "q": "What is the only country that borders both the Atlantic and Indian Oceans?",
+    "options": [
+      "Brazil",
+      "Australia",
+      "Egypt",
+      "South Africa"
+    ],
+    "correct": 3,
+    "time": 20
+  },
+  {
+    "category": "Math",
+    "q": "What does integrating an acceleration function with respect to time give you?",
+    "options": [
+      "Displacement",
+      "Jerk",
+      "Velocity",
+      "Force"
+    ],
+    "correct": 2,
+    "time": 20
+  },
+  {
+    "category": "UW History",
+    "q": "Which 1909 world's fair was held on UW's campus?",
+    "options": [
+      "Alaska-Yukon-Pacific Exposition",
+      "Panama-Pacific Exposition",
+      "Lewis and Clark Exposition",
+      "Century of Progress"
+    ],
+    "correct": 0,
+    "time": 20
+  },
+  {
+    "category": "Brainrot",
+    "q": "What does 'no cap' mean?",
+    "options": [
+      "No money",
+      "No idea",
+      "No lying",
+      "No hat"
+    ],
+    "correct": 2,
+    "time": 15
+  },
+  {
+    "category": "Geography",
+    "q": "Mount Kilimanjaro is located in which country?",
+    "options": [
+      "Tanzania",
+      "Ethiopia",
+      "Uganda",
+      "Kenya"
+    ],
+    "correct": 0,
+    "time": 15
+  },
+  {
+    "category": "UW History",
+    "q": "Husky Stadium set the college football loudness record at 130 decibels in 1992 during a game against which team?",
+    "options": [
+      "Nebraska",
+      "Washington State",
+      "USC",
+      "Oregon"
+    ],
+    "correct": 0,
+    "time": 20
+  },
+  {
+    "category": "World History",
+    "q": "Which European country remained neutral during both World War I and World War II?",
+    "options": [
+      "Spain",
+      "Sweden",
+      "Switzerland",
+      "Portugal"
+    ],
+    "correct": 2,
+    "time": 20
+  },
+  {
+    "category": "UW History",
+    "q": "Who was the first person to receive a bachelor's degree from UW, graduating in 1876?",
+    "options": [
+      "Edmond Meany",
+      "Clara McCarty",
+      "Arthur Denny",
+      "Daniel Bagley"
+    ],
+    "correct": 1,
+    "time": 20
+  },
+  {
+    "category": "Math",
+    "q": "L'H\u00f4pital's Rule is used to evaluate limits that result in which form?",
+    "options": [
+      "0/0 or \u221e/\u221e",
+      "\u221e - \u221e",
+      "0 \u00d7 \u221e",
+      "1^\u221e"
+    ],
+    "correct": 0,
+    "time": 20
+  },
+  {
+    "category": "Geography",
+    "q": "Which country has the most natural lakes in the world?",
+    "options": [
+      "Russia",
+      "Canada",
+      "United States",
+      "Finland"
+    ],
+    "correct": 1,
+    "time": 20
+  },
+  {
+    "category": "UW History",
+    "q": "Which actor from 'The Office' attended UW before transferring to NYU?",
+    "options": [
+      "Rainn Wilson",
+      "Steve Carell",
+      "Ed Helms",
+      "John Krasinski"
+    ],
+    "correct": 0,
+    "time": 20
+  },
+  {
+    "category": "Math",
+    "q": "What is the derivative of x\u00b3 with respect to x?",
+    "options": [
+      "x\u00b3/3",
+      "3x",
+      "3x\u00b2",
+      "x\u00b2"
+    ],
+    "correct": 2,
+    "time": 15
+  },
+  {
+    "category": "UW History",
+    "q": "The stadium 'Wave' tradition was first developed by UW yell leader Robb Weller in what year?",
+    "options": [
+      "1973",
+      "1977",
+      "1985",
+      "1981"
+    ],
+    "correct": 3,
+    "time": 20
+  },
+  {
+    "category": "Geography",
+    "q": "What is the smallest country in the world by area?",
+    "options": [
+      "San Marino",
+      "Monaco",
+      "Liechtenstein",
+      "Vatican City"
+    ],
+    "correct": 3,
+    "time": 15
+  },
+  {
+    "category": "Math",
+    "q": "In Taylor series, a function is approximated using what?",
+    "options": [
+      "Matrix operations",
+      "Geometric sequences",
+      "Logarithmic identities",
+      "Infinite sum of polynomials"
+    ],
+    "correct": 3,
+    "time": 20
+  }
+]

@@ -8,6 +8,22 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 app.use(express.static(path.join(__dirname, "public")));
+app.use(express.json());
+
+// ─── Preset Questions ────────────────────────────────────────────────
+const fs = require("fs");
+let presetQuestions = [];
+try {
+  presetQuestions = JSON.parse(fs.readFileSync(path.join(__dirname, "questions.json"), "utf8"));
+  console.log(`Loaded ${presetQuestions.length} preset questions`);
+} catch (e) {
+  console.log("No preset questions found");
+}
+
+app.get("/api/questions", (req, res) => {
+  if (req.query.key !== "hostonly") return res.status(403).json({ error: "nope" });
+  res.json(presetQuestions);
+});
 
 // ─── Game State ──────────────────────────────────────────────────────
 const games = {}; // code -> { questions, players, phase, qi, answers, host }
@@ -84,13 +100,59 @@ wss.on("connection", (ws) => {
           ws.send(JSON.stringify({ type: "error", message: "Game not found" }));
           return;
         }
+        myCode = code;
+        
+        // Check if this is a reconnecting player (same name)
+        let existingPid = null;
+        if (msg.playerId) {
+          // Reconnect with known ID
+          if (game.players[msg.playerId]) {
+            existingPid = msg.playerId;
+          }
+        }
+        if (!existingPid) {
+          // Check by name for reconnects without ID
+          for (const [pid, name] of Object.entries(game.players)) {
+            if (name === msg.name.trim()) { existingPid = pid; break; }
+          }
+        }
+
+        if (existingPid) {
+          // Reconnecting player
+          myId = existingPid;
+          game.clients.add(ws);
+          ws.send(JSON.stringify({ type: "joined", playerId: myId, reconnected: true }));
+          // Send current game state
+          if (game.phase === "question") {
+            const q = game.questions[game.qi];
+            ws.send(JSON.stringify({
+              type: "question", qi: game.qi, total: game.questions.length,
+              question: q.q, options: q.options, time: 0,
+            }));
+            // If they already answered, let them know
+            if (game.answers[game.qi] && game.answers[game.qi][myId] !== undefined) {
+              ws.send(JSON.stringify({ type: "already_answered", choice: game.answers[game.qi][myId] }));
+            }
+          } else if (game.phase === "reveal") {
+            const q = game.questions[game.qi];
+            ws.send(JSON.stringify({
+              type: "question", qi: game.qi, total: game.questions.length,
+              question: q.q, options: q.options, time: 0,
+            }));
+            ws.send(JSON.stringify({ type: "reveal", correct: q.correct }));
+          } else if (game.phase === "results") {
+            ws.send(JSON.stringify({ type: "results", scores: getScores(game) }));
+          }
+          return;
+        }
+
+        // New player - only allow in lobby
         if (game.phase !== "lobby") {
           ws.send(JSON.stringify({ type: "error", message: "Game already in progress" }));
           return;
         }
-        myCode = code;
         myId = "p_" + Math.random().toString(36).slice(2, 8);
-        game.players[myId] = msg.name;
+        game.players[myId] = msg.name.trim();
         game.clients.add(ws);
         ws.send(JSON.stringify({ type: "joined", playerId: myId }));
         broadcast(code, { type: "players", players: getPlayerList(game) });
