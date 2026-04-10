@@ -176,6 +176,7 @@ wss.on("connection", (ws) => {
           question: q.q,
           options: q.options,
           time: q.time,
+          code: myCode,
         });
 
         // Server-side timer
@@ -209,6 +210,15 @@ wss.on("connection", (ws) => {
           correct: q.correct,
           answerCount: Object.keys(game.answers[game.qi] || {}).length,
         });
+        break;
+      }
+
+      // HOST: Show scoreboard between questions
+      case "show_scoreboard": {
+        const game = games[myCode];
+        if (!game || ws !== game.host) return;
+        game.phase = "scoreboard";
+        broadcast(myCode, { type: "scoreboard", scores: getScores(game), qi: game.qi, total: game.questions.length });
         break;
       }
 

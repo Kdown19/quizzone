@@ -288,6 +288,7 @@
 <div id="host-question" class="screen">
   <div class="top-bar">
     <span style="color:var(--text-dim);font-size:14px" id="hq-progress"></span>
+    <span class="game-code" style="font-size:14px;padding:5px 10px;letter-spacing:2px" id="hq-code"></span>
     <span class="timer-display" id="hq-timer"></span>
   </div>
   <div class="screen-pad" style="flex:1;justify-content:center">
@@ -339,6 +340,7 @@
 <div id="player-question" class="screen">
   <div class="top-bar">
     <span style="color:var(--text-dim);font-size:14px" id="pq-progress"></span>
+    <span class="game-code" style="font-size:14px;padding:5px 10px;letter-spacing:2px" id="pq-code"></span>
     <span class="timer-display" id="pq-timer"></span>
   </div>
   <div class="pq-content">
@@ -356,6 +358,34 @@
     <h2 style="font-family:'Space Mono',monospace;font-size:28px">RESULTS</h2>
     <div id="player-result-highlight" style="margin:16px 0;width:100%;max-width:320px"></div>
     <div id="player-result-list" style="width:100%;max-width:400px"></div>
+  </div>
+</div>
+
+<!-- HOST: SCOREBOARD -->
+<div id="host-scoreboard" class="screen">
+  <div class="top-bar">
+    <span class="q-label">QUIZZONE</span>
+    <span class="game-code" id="hsb-code"></span>
+  </div>
+  <div class="screen-center" style="justify-content:flex-start;padding-top:10px">
+    <h2 style="font-family:'Space Mono',monospace;font-size:28px">SCOREBOARD</h2>
+    <p class="subtitle" id="hsb-progress"></p>
+    <div id="hsb-list" style="margin-top:16px;width:100%;max-width:480px"></div>
+    <div id="hsb-actions" style="margin-top:20px"></div>
+  </div>
+</div>
+
+<!-- PLAYER: SCOREBOARD -->
+<div id="player-scoreboard" class="screen">
+  <div class="top-bar">
+    <span class="q-label">QUIZZONE</span>
+    <span class="game-code" style="font-size:14px;padding:5px 10px;letter-spacing:2px" id="psb-code"></span>
+  </div>
+  <div class="screen-center" style="justify-content:flex-start;padding-top:10px">
+    <h2 style="font-family:'Space Mono',monospace;font-size:28px">SCOREBOARD</h2>
+    <div id="psb-highlight" style="margin:12px 0;width:100%;max-width:320px"></div>
+    <div id="psb-list" style="width:100%;max-width:400px"></div>
+    <p class="subtitle" style="margin-top:16px">Next question coming up...</p>
   </div>
 </div>
 
@@ -504,6 +534,7 @@ function handleMessage(msg) {
       currentPhase = 'question';
       playerSelected = null;
       playerSubmitted = false;
+      if (msg.code) gameCode = msg.code;
       if (role === 'host') renderHostQuestion(msg);
       else renderPlayerQuestion(msg);
       break;
@@ -521,6 +552,10 @@ function handleMessage(msg) {
       currentPhase = 'reveal';
       if (role === 'host') renderHostReveal(msg);
       else renderPlayerReveal(msg);
+      break;
+    case 'scoreboard':
+      if (role === 'host') renderHostScoreboard(msg);
+      else renderPlayerScoreboard(msg);
       break;
     case 'results':
       if (role === 'host') renderHostResults(msg.scores);
@@ -619,6 +654,7 @@ function renderHostQuestion(msg) {
   currentHostMsg = msg;
   showScreen('host-question');
   document.getElementById('hq-progress').textContent = `Question ${msg.qi + 1} of ${msg.total}`;
+  document.getElementById('hq-code').textContent = gameCode;
   document.getElementById('hq-timer').textContent = msg.time;
   document.getElementById('hq-timer').style.color = 'var(--text)';
   document.getElementById('hq-text').textContent = msg.question;
@@ -644,10 +680,10 @@ function renderHostReveal(msg) {
   }).join('');
 
   document.getElementById('hq-timer').textContent = '';
-  const isLast = hostQi >= currentHostMsg.total - 1;
+  // Always go to scoreboard first
   document.getElementById('hq-actions').innerHTML =
-    `<button class="btn btn-primary" onclick="${isLast ? "send({type:'show_results'})" : `send({type:'start_question',qi:${hostQi+1}})`}" style="padding:8px 20px;width:auto">
-      ${isLast ? 'See Results →' : 'Next Question →'}
+    `<button class="btn btn-primary" onclick="send({type:'show_scoreboard'})" style="padding:8px 20px;width:auto">
+      Scoreboard →
     </button>`;
 }
 
@@ -674,6 +710,59 @@ function renderHostResults(scores) {
   `).join('');
 }
 
+// ─── HOST: Scoreboard ────────────────────────────────────────────────
+function renderHostScoreboard(msg) {
+  showScreen('host-scoreboard');
+  document.getElementById('hsb-code').textContent = gameCode;
+  document.getElementById('hsb-progress').textContent = `After question ${msg.qi + 1} of ${msg.total}`;
+  const medals = ['🥇','🥈','🥉'];
+  const medalColors = ['var(--gold)','var(--silver)','var(--bronze)'];
+  document.getElementById('hsb-list').innerHTML = msg.scores.map((s, i) => `
+    <div style="background:var(--surface);border-radius:14px;padding:14px 20px;
+      display:flex;align-items:center;gap:14px;margin-bottom:8px;
+      border:1px solid ${i < 3 ? medalColors[i] : 'var(--surface-light)'};">
+      <span style="font-family:'Space Mono',monospace;font-size:${i<3?22:16}px;color:${i<3?medalColors[i]:'var(--text-dim)'};width:36px;text-align:center;flex-shrink:0">
+        ${i < 3 ? medals[i] : (i+1)+'.'}
+      </span>
+      <span style="font-weight:700;font-size:17px;flex:1;text-align:left">${esc(s.name)}</span>
+      <span class="score-num" style="font-size:18px">${s.score}</span>
+    </div>
+  `).join('');
+
+  const isLast = msg.qi >= msg.total - 1;
+  document.getElementById('hsb-actions').innerHTML =
+    `<button class="btn btn-primary" onclick="${isLast ? "send({type:'show_results'})" : `send({type:'start_question',qi:${hostQi+1}})`}" style="width:220px">
+      ${isLast ? 'See Final Results →' : 'Next Question →'}
+    </button>`;
+}
+
+// ─── PLAYER: Scoreboard ─────────────────────────────────────────────
+function renderPlayerScoreboard(msg) {
+  showScreen('player-scoreboard');
+  document.getElementById('psb-code').textContent = gameCode;
+  const myRank = msg.scores.findIndex(s => s.pid === playerId);
+  const myScore = myRank >= 0 ? msg.scores[myRank].score : 0;
+  const medals = ['🥇','🥈','🥉'];
+  const medalColors = ['var(--gold)','var(--silver)','var(--bronze)'];
+
+  document.getElementById('psb-highlight').innerHTML = `
+    <div style="background:var(--surface);border-radius:14px;padding:16px;
+      border:1px solid ${myRank < 3 ? medalColors[myRank] : 'var(--surface-light)'};">
+      <div style="font-size:32px;margin-bottom:4px">${myRank===0?'🥇':myRank===1?'🥈':myRank===2?'🥉':'🎯'}</div>
+      <div style="font-weight:800;font-size:20px">#${myRank + 1} Place</div>
+      <div style="font-family:'Space Mono',monospace;color:var(--accent);font-size:18px;margin-top:2px">${myScore} pts</div>
+    </div>`;
+
+  document.getElementById('psb-list').innerHTML = msg.scores.map((s, i) => `
+    <div class="result-row ${s.pid === playerId ? 'me' : ''}">
+      <span style="font-weight:${s.pid===playerId?700:400}">
+        ${i < 3 ? medals[i] : (i+1)+'.'} ${esc(s.name)}
+      </span>
+      <span class="score-num">${s.score}</span>
+    </div>
+  `).join('');
+}
+
 // ─── PLAYER: Join ────────────────────────────────────────────────────
 function joinGame() {
   const code = document.getElementById('pj-code').value.trim();
@@ -692,6 +781,7 @@ function renderPlayerQuestion(msg) {
   playerCurrentMsg = msg;
   showScreen('player-question');
   document.getElementById('pq-progress').textContent = `Q${msg.qi + 1}/${msg.total}`;
+  document.getElementById('pq-code').textContent = gameCode;
   document.getElementById('pq-timer').textContent = msg.time;
   document.getElementById('pq-timer').style.color = 'var(--text)';
   document.getElementById('pq-text').textContent = msg.question;
