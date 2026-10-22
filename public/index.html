@@ -248,6 +248,7 @@
   <div class="screen-center">
     <h1 class="logo">QUIZZONE</h1>
     <p class="subtitle" style="max-width:260px">Multiplayer quiz — same points for everyone, no speed bonus</p>
+    <button class="btn btn-submit" style="width:260px;display:none" id="rejoin-btn" onclick="rejoinSaved()"></button>
     <button class="btn btn-primary" style="width:220px" onclick="goHost()">Host a Game</button>
     <button class="btn btn-ghost" style="width:220px" onclick="goPlayer()">Join a Game</button>
     <p id="landing-error" style="color:var(--wrong);font-size:14px;display:none"></p>
@@ -307,7 +308,7 @@
     <h1 style="font-family:'Space Mono',monospace;font-size:32px">RESULTS</h1>
     <p class="subtitle" id="results-subtitle"></p>
     <div id="results-list" style="margin-top:20px;width:100%;max-width:480px"></div>
-    <button class="btn btn-ghost" style="margin-top:20px;width:220px" onclick="location.reload()">Play Again</button>
+    <button class="btn btn-ghost" style="margin-top:20px;width:220px" onclick="playAgain()">Play Again</button>
   </div>
 </div>
 
@@ -323,6 +324,7 @@
       <input class="input" id="pj-name" placeholder="Your name" style="text-align:center">
       <p style="color:var(--wrong);font-size:14px;display:none" id="pj-error"></p>
       <button class="btn btn-primary" id="pj-btn" onclick="joinGame()">Join Game</button>
+      <p class="subtitle" style="font-size:13px;margin-top:4px">Phone died? Join with the same code and name and you'll pick up where you left off, score and all.</p>
     </div>
   </div>
 </div>
@@ -332,6 +334,7 @@
   <div class="screen-center">
     <h2 style="font-weight:700">You're in!</h2>
     <p class="subtitle">Waiting for the host to start...</p>
+    <p class="subtitle" style="font-size:13px">Game <b id="pw-code" style="font-family:'Space Mono',monospace;letter-spacing:2px"></b> · playing as <b id="pw-name"></b></p>
     <div class="spinner"></div>
   </div>
 </div>
@@ -406,33 +409,90 @@ function showScreen(id) {
   document.getElementById(id).classList.add('active');
 }
 
+// ─── Session (for rejoining) ─────────────────────────────────────────
+// `session` (in memory) drives automatic reconnects for this tab.
+// The copy in localStorage survives a dead phone / closed browser and powers
+// the "Rejoin" button on the home screen.
+// Player: { role:'player', code, name, pid }   Host: { role:'host', code, hostKey }
+let session = null;
+const SESSION_KEY = 'qz_session';
+
+function saveSession(s) {
+  session = s;
+  try { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); } catch (e) {}
+}
+function clearSession() {
+  session = null;
+  try { localStorage.removeItem(SESSION_KEY); } catch (e) {}
+}
+function loadSavedSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY)); } catch (e) { return null; }
+}
+
 // ─── WebSocket ───────────────────────────────────────────────────────
-let disconnected = false;
+let reconnectTimer = null;
+let reconnectDelay = 1000;
+let connecting = false;
+let kicked = false;
 
 function connect() {
   return new Promise((resolve, reject) => {
     const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const url = `${proto}//${location.host}`;
-    ws = new WebSocket(url);
-    ws.onopen = () => {
-      hideReconnectBanner();
-      disconnected = false;
-      resolve();
-    };
-    ws.onerror = (e) => reject(e);
-    ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
-    ws.onclose = () => {
-      if (role === 'player' && playerId) {
-        disconnected = true;
-        showReconnectBanner();
-      }
-      if (role === 'host') {
-        // Host auto-reconnects silently
-        setTimeout(() => { connect().catch(() => {}); }, 2000);
-      }
+    const sock = new WebSocket(`${proto}//${location.host}`);
+    ws = sock;
+    sock.onopen = () => { reconnectDelay = 1000; resolve(); };
+    sock.onerror = (e) => reject(e);
+    sock.onmessage = (e) => handleMessage(JSON.parse(e.data));
+    sock.onclose = () => {
+      if (sock !== ws) return;            // an older socket we already replaced
+      if (session && !kicked) scheduleReconnect();
     };
   });
 }
+
+function scheduleReconnect() {
+  showReconnectBanner();
+  clearTimeout(reconnectTimer);
+  reconnectTimer = setTimeout(attemptReconnect, reconnectDelay);
+  reconnectDelay = Math.min(reconnectDelay * 2, 5000);
+}
+
+async function attemptReconnect() {
+  clearTimeout(reconnectTimer);
+  if (!session || kicked || connecting) return;
+  if (ws && ws.readyState <= 1) return;  // already open / opening
+  connecting = true;
+  const banner = document.getElementById('reconnect-banner');
+  if (banner) banner.firstChild.textContent = 'Reconnecting... ';
+  try {
+    await connect();
+    resumeSession();
+  } catch (e) {
+    scheduleReconnect();
+  } finally {
+    connecting = false;
+  }
+}
+
+function resumeSession() {
+  if (!session) return;
+  if (session.role === 'host') {
+    send({ type: 'host_rejoin', code: session.code, hostKey: session.hostKey });
+  } else {
+    send({ type: 'join', code: session.code, name: session.name, playerId: session.pid });
+  }
+}
+
+// Phones kill sockets when the screen locks; reconnect as soon as they're back
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && session && !kicked && (!ws || ws.readyState > 1)) {
+    reconnectDelay = 1000;
+    attemptReconnect();
+  }
+});
+window.addEventListener('online', () => {
+  if (session && !kicked && (!ws || ws.readyState > 1)) { reconnectDelay = 1000; attemptReconnect(); }
+});
 
 function showReconnectBanner() {
   let banner = document.getElementById('reconnect-banner');
@@ -440,9 +500,10 @@ function showReconnectBanner() {
     banner = document.createElement('div');
     banner.id = 'reconnect-banner';
     banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:var(--wrong);color:#fff;padding:14px 20px;text-align:center;font-family:Outfit,sans-serif;font-weight:700;font-size:15px;z-index:9999;display:flex;align-items:center;justify-content:center;gap:12px;';
-    banner.innerHTML = 'Connection lost <button onclick="attemptReconnect()" style="background:#fff;color:var(--wrong);border:none;border-radius:8px;padding:8px 20px;font-family:Outfit,sans-serif;font-weight:700;font-size:14px;cursor:pointer;">Reconnect</button>';
+    banner.innerHTML = '<span>Connection lost. Reconnecting... </span><button onclick="reconnectDelay=1000;attemptReconnect()" style="background:#fff;color:var(--wrong);border:none;border-radius:8px;padding:8px 20px;font-family:Outfit,sans-serif;font-weight:700;font-size:14px;cursor:pointer;">Retry now</button>';
     document.body.appendChild(banner);
   }
+  banner.firstChild.textContent = 'Connection lost. Reconnecting... ';
   banner.style.display = 'flex';
 }
 
@@ -451,45 +512,65 @@ function hideReconnectBanner() {
   if (banner) banner.style.display = 'none';
 }
 
-async function attemptReconnect() {
-  const banner = document.getElementById('reconnect-banner');
-  if (banner) banner.innerHTML = 'Reconnecting...';
-  try {
-    await connect();
-    // Re-send join with existing player info
-    const storedCode = sessionStorage.getItem('qz_code');
-    const storedName = sessionStorage.getItem('qz_name');
-    const storedPid = sessionStorage.getItem('qz_pid');
-    if (storedCode && storedName) {
-      gameCode = storedCode;
-      send({ type: 'join', code: storedCode, name: storedName, playerId: storedPid });
-    }
-  } catch(e) {
-    if (banner) banner.innerHTML = 'Connection lost <button onclick="attemptReconnect()" style="background:#fff;color:var(--wrong);border:none;border-radius:8px;padding:8px 20px;font-family:Outfit,sans-serif;font-weight:700;font-size:14px;cursor:pointer;">Reconnect</button>';
+function send(msg) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg)); }
+
+function landingError(text) {
+  const el = document.getElementById('landing-error');
+  el.textContent = text;
+  el.style.display = text ? 'block' : 'none';
+}
+
+function refreshRejoinButton() {
+  const saved = loadSavedSession();
+  const btn = document.getElementById('rejoin-btn');
+  if (saved && saved.code) {
+    btn.textContent = saved.role === 'host'
+      ? `Resume hosting ${saved.code}`
+      : `Rejoin ${saved.code} as ${saved.name}`;
+    btn.style.display = 'block';
+  } else {
+    btn.style.display = 'none';
   }
 }
 
-function send(msg) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(msg)); }
+async function rejoinSaved() {
+  const saved = loadSavedSession();
+  if (!saved) return refreshRejoinButton();
+  try {
+    kicked = false;
+    await connect();
+    role = saved.role;
+    session = saved;
+    resumeSession();
+  } catch (e) {
+    landingError('Connection failed. Try again.');
+  }
+}
+
+function playAgain() {
+  clearSession();
+  location.reload();
+}
 
 async function goHost() {
   try {
+    kicked = false;
     await connect();
     role = 'host';
     showScreen('host-setup');
   } catch(e) {
-    document.getElementById('landing-error').textContent = 'Connection failed';
-    document.getElementById('landing-error').style.display = 'block';
+    landingError('Connection failed');
   }
 }
 
 async function goPlayer() {
   try {
+    kicked = false;
     await connect();
     role = 'player';
     showScreen('player-join');
   } catch(e) {
-    document.getElementById('landing-error').textContent = 'Connection failed';
-    document.getElementById('landing-error').style.display = 'block';
+    landingError('Connection failed');
   }
 }
 
@@ -497,13 +578,40 @@ function handleMessage(msg) {
   switch (msg.type) {
     case 'created':
       gameCode = msg.code;
+      saveSession({ role: 'host', code: msg.code, hostKey: msg.hostKey });
       document.getElementById('host-code').textContent = gameCode;
       showScreen('host-lobby');
       break;
+    case 'host_resumed':
+      role = 'host';
+      gameCode = msg.code;
+      questions = msg.questions;
+      hostQi = msg.qi;
+      hideReconnectBanner();
+      document.getElementById('host-code').textContent = gameCode;
+      if (msg.phase === 'lobby') showScreen('host-lobby');
+      // other phases: the server follows up with the current screen's message
+      break;
     case 'joined':
+      role = 'player';
       playerId = msg.playerId;
-      sessionStorage.setItem('qz_pid', playerId);
-      if (!msg.reconnected) showScreen('player-wait');
+      gameCode = msg.code;
+      saveSession({ role: 'player', code: msg.code, name: msg.name, pid: msg.playerId });
+      hideReconnectBanner();
+      document.getElementById('pw-code').textContent = msg.code;
+      document.getElementById('pw-name').textContent = msg.name;
+      document.getElementById('pj-error').style.display = 'none';
+      if (msg.phase === 'lobby') showScreen('player-wait');
+      // other phases: the server follows up with the current screen's message
+      break;
+    case 'kicked':
+      // This name/host spot was picked up on another device or tab
+      kicked = true;
+      session = null;
+      hideReconnectBanner();
+      showScreen('landing');
+      refreshRejoinButton();
+      landingError('You rejoined this game from another device.');
       break;
     case 'already_answered':
       // Player reconnected and had already answered this question
@@ -524,11 +632,21 @@ function handleMessage(msg) {
       document.getElementById('pq-footer').style.display = 'block';
       break;
     case 'error':
-      document.getElementById('pj-error').textContent = msg.message;
-      document.getElementById('pj-error').style.display = 'block';
+      if (msg.reason === 'not_found' && session) {
+        // Tried to resume a game that no longer exists
+        clearSession();
+        role = null;
+        hideReconnectBanner();
+        showScreen('landing');
+        refreshRejoinButton();
+        landingError('That game has ended.');
+      } else {
+        document.getElementById('pj-error').textContent = msg.message;
+        document.getElementById('pj-error').style.display = 'block';
+      }
       break;
     case 'players':
-      renderHostPlayers(msg.players);
+      if (role === 'host') renderHostPlayers(msg.players);
       break;
     case 'question':
       currentPhase = 'question';
@@ -550,6 +668,7 @@ function handleMessage(msg) {
       break;
     case 'reveal':
       currentPhase = 'reveal';
+      if (msg.yourChoice !== undefined) playerSelected = msg.yourChoice;
       if (role === 'host') renderHostReveal(msg);
       else renderPlayerReveal(msg);
       break;
@@ -639,7 +758,9 @@ function renderHostPlayers(players) {
   if (players.length === 0) {
     el.innerHTML = '<span style="color:var(--text-dim);font-style:italic">No one yet...</span>';
   } else {
-    el.innerHTML = players.map(p => `<div class="player-chip">${esc(p.name)}</div>`).join('');
+    el.innerHTML = players.map(p => p.connected === false
+      ? `<div class="player-chip" style="opacity:0.4" title="Disconnected">${esc(p.name)} (offline)</div>`
+      : `<div class="player-chip">${esc(p.name)}</div>`).join('');
   }
   document.getElementById('host-start-btn').disabled = players.length === 0;
 }
@@ -731,7 +852,7 @@ function renderHostScoreboard(msg) {
 
   const isLast = msg.qi >= msg.total - 1;
   document.getElementById('hsb-actions').innerHTML =
-    `<button class="btn btn-primary" onclick="${isLast ? "send({type:'show_results'})" : `send({type:'start_question',qi:${hostQi+1}})`}" style="width:220px">
+    `<button class="btn btn-primary" onclick="${isLast ? "send({type:'show_results'})" : `send({type:'start_question',qi:${msg.qi+1}})`}" style="width:220px">
       ${isLast ? 'See Final Results →' : 'Next Question →'}
     </button>`;
 }
@@ -769,8 +890,9 @@ function joinGame() {
   const name = document.getElementById('pj-name').value.trim();
   if (code.length < 3 || !name) return;
   gameCode = code;
-  sessionStorage.setItem('qz_code', code);
-  sessionStorage.setItem('qz_name', name);
+  session = null; // fresh join; saved once the server confirms
+  kicked = false;
+  document.getElementById('pj-error').style.display = 'none';
   send({ type: 'join', code, name });
 }
 
@@ -894,6 +1016,7 @@ function renderPlayerResults(scores) {
 
 // ─── Init ────────────────────────────────────────────────────────────
 addQuestion();
+refreshRejoinButton();
 </script>
 </body>
 </html>
